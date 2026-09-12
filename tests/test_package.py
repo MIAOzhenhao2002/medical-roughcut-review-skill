@@ -1,0 +1,79 @@
+import json
+import re
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SKILL = ROOT / "roughcut-review"
+
+
+class StandaloneSkillTests(unittest.TestCase):
+    def test_required_files_exist(self):
+        required = [
+            SKILL / "SKILL.md",
+            SKILL / "agents" / "openai.yaml",
+            SKILL / "references" / "select-and-split.md",
+            SKILL / "references" / "medical-review.md",
+            SKILL / "references" / "minimal-rewrite.md",
+            SKILL / "references" / "independent-review.md",
+            SKILL / "assets" / "title-handoff.md",
+            ROOT / "LICENSE",
+            ROOT / "SECURITY.md",
+        ]
+        self.assertEqual([str(path) for path in required if not path.is_file()], [])
+
+    def test_frontmatter_and_folder_name_match(self):
+        text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+        self.assertIsNotNone(match)
+        self.assertIn("name: roughcut-review", match.group(1))
+        self.assertRegex(match.group(1), r"description: .+")
+
+    def test_markdown_links_are_local_and_resolve(self):
+        for source in SKILL.rglob("*.md"):
+            text = source.read_text(encoding="utf-8")
+            for target in re.findall(r"\]\(([^)]+)\)", text):
+                if "://" in target or target.startswith("#"):
+                    continue
+                resolved = (source.parent / target).resolve()
+                self.assertTrue(resolved.is_file(), f"{source}: missing {target}")
+                self.assertTrue(str(resolved).startswith(str(SKILL.resolve())))
+
+    def test_no_mother_project_dependencies_remain(self):
+        text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in SKILL.rglob("*")
+            if path.is_file() and path.suffix in {".md", ".yaml", ".json"}
+        )
+        forbidden = [
+            "templates/",
+            "config/",
+            "profiles/",
+            "roughcut-module-map",
+            "medical-guideline-brief",
+            "clone-minimal-rewrite",
+            "roughcut-independent-review",
+            "花医生",
+        ]
+        self.assertEqual([item for item in forbidden if item in text], [])
+
+    def test_assets_and_references_are_generic(self):
+        for path in (SKILL / "assets").glob("*.json"):
+            json.loads(path.read_text(encoding="utf-8"))
+        text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in SKILL.rglob("*")
+            if path.is_file() and path.suffix in {".md", ".yaml", ".json"}
+        )
+        self.assertNotRegex(text, r"\b1[3-9]\d{9}\b")
+        self.assertNotRegex(text, r"\b\d{15,18}[0-9Xx]\b")
+
+    def test_implicit_invocation_is_enabled(self):
+        yaml_text = (SKILL / "agents" / "openai.yaml").read_text(encoding="utf-8")
+        self.assertIn("allow_implicit_invocation: true", yaml_text)
+        self.assertIn("$roughcut-review", yaml_text)
+
+
+if __name__ == "__main__":
+    unittest.main()

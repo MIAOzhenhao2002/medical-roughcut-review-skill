@@ -11,6 +11,8 @@ SKILL = ROOT / "roughcut-review"
 class StandaloneSkillTests(unittest.TestCase):
     def test_required_files_exist(self):
         required = [
+            ROOT / "AGENTS.md",
+            ROOT / "INSTALL.md",
             SKILL / "SKILL.md",
             SKILL / "agents" / "openai.yaml",
             SKILL / "references" / "select-and-split.md",
@@ -29,6 +31,9 @@ class StandaloneSkillTests(unittest.TestCase):
         self.assertIsNotNone(match)
         self.assertIn("name: roughcut-review", match.group(1))
         self.assertRegex(match.group(1), r"description: .+")
+        self.assertIn("license: MIT", match.group(1))
+        self.assertIn('version: "0.2.0"', match.group(1))
+        self.assertIn("standard: Agent Skills", match.group(1))
 
     def test_markdown_links_are_local_and_resolve(self):
         for source in SKILL.rglob("*.md"):
@@ -73,6 +78,21 @@ class StandaloneSkillTests(unittest.TestCase):
         yaml_text = (SKILL / "agents" / "openai.yaml").read_text(encoding="utf-8")
         self.assertIn("allow_implicit_invocation: true", yaml_text)
         self.assertIn("$roughcut-review", yaml_text)
+
+    def test_package_is_positioned_as_cross_agent(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        install = (ROOT / "INSTALL.md").read_text(encoding="utf-8")
+        entry = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        combined = "\n".join([readme, install, entry])
+
+        self.assertIn("通用 Agent 能力包", readme)
+        self.assertIn("Agent Skills 规范", readme)
+        self.assertIn("OpenAI Codex", combined)
+        self.assertIn("Claude Code", combined)
+        self.assertIn("GitHub Copilot", combined)
+        self.assertIn("唯一业务入口", entry)
+        self.assertIn("可选界面适配", entry)
+        self.assertNotIn("一个开源、可独立安装的 Codex Skill", readme)
 
 
 if __name__ == "__main__":

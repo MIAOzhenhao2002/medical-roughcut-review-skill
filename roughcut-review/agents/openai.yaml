@@ -1,0 +1,6 @@
+interface:
+  display_name: "医疗视频粗剪"
+  short_description: "先判断做不做与拆几条，再按需完成医疗短视频粗剪初检"
+  default_prompt: "使用 $roughcut-review 先判断这份素材做不做、拆几条，再按需完成删留排改。"
+policy:
+  allow_implicit_invocation: true

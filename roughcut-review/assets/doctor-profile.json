@@ -1,0 +1,19 @@
+{
+  "doctor_id": "replace-me",
+  "display_name": "replace-me",
+  "department": "replace-me",
+  "specialties": [],
+  "account_ids": [],
+  "platforms": [
+    "抖音",
+    "视频号"
+  ],
+  "speech_preferences": {
+    "keep": [],
+    "avoid": [],
+    "natural_transitions": []
+  },
+  "content_preferences": [],
+  "learning_level": "observation",
+  "notes": ""
+}

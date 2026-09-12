@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "account_id": "replace-me",
+  "display_name": "replace-me",
+  "platform": "replace-me",
+  "owner_or_maintainer": "replace-me",
+  "profile_version": "0.1.0",
+  "doctor_ids": [],
+  "primary_audiences": [],
+  "account_promise": "",
+  "content_objectives": [
+    "reach",
+    "trust",
+    "save_or_share",
+    "follow",
+    "profile_visit_or_consultation"
+  ],
+  "content_portfolio": [],
+  "stable_rules": [],
+  "experimental_candidates": [],
+  "metric_windows": {
+    "early": "account-specific",
+    "stable": "account-specific",
+    "long_tail": "account-specific"
+  },
+  "updated_at": "",
+  "notes": ""
+}

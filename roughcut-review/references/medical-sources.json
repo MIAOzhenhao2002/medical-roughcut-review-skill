@@ -1,0 +1,144 @@
+{
+  "version": "1.1.0",
+  "updated_at": "2026-08-05",
+  "strategy": "online_first_chinese_authoritative",
+  "principles": [
+    "按当前素材中的具体医学问题逐项检索，不批量下载整套资料。",
+    "中文权威指南、规范和中国人群适用证据优先；中文资料不足、过旧或冲突时再补充权威国际来源。",
+    "指南和规范优先于单篇研究；专家共识必须标明证据等级和局限。",
+    "本地缓存仅用于提速，使用前仍需联网确认版本、修订或撤回状态。",
+    "检索词必须去除姓名、电话、住院号、影像编号和其他患者标识。",
+    "不能确认时记录 needs_review，不根据搜索摘要或单一二手解读强行下结论。"
+  ],
+  "must_search_when": [
+    "术式、药名、剂量、关键解剖词或诊断范围存在疑问",
+    "涉及治疗选择、禁忌、适用条件、疗效、概率、预后或因果",
+    "不同说法可能导致观众采取不同医疗行为",
+    "医学结论准备进入标题、封面、知识字卡或AI修音",
+    "现有知识可能随指南、药品说明书、法规或平台规则更新",
+    "用户要求核查、给依据或确认准确性"
+  ],
+  "source_priority": [
+    {
+      "level": 1,
+      "name": "国家主管部门与法定监管信息",
+      "use_for": [
+        "国家诊疗规范与临床路径",
+        "药品批准与说明书信息",
+        "医疗广告、医疗质量和患者安全规则"
+      ],
+      "portals": [
+        {
+          "name": "国家卫生健康委员会",
+          "url": "https://www.nhc.gov.cn/",
+          "domains": ["nhc.gov.cn"]
+        },
+        {
+          "name": "国家药品监督管理局政务服务门户",
+          "url": "https://zwfw.nmpa.gov.cn/",
+          "domains": ["nmpa.gov.cn", "app.gjzwfw.gov.cn"]
+        },
+        {
+          "name": "国家市场监督管理总局",
+          "url": "https://www.samr.gov.cn/",
+          "domains": ["samr.gov.cn"]
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "name": "国家级专业学会及其专科分会",
+      "use_for": [
+        "中国临床实践指南",
+        "专业技术规范",
+        "专家共识与共识更新"
+      ],
+      "portals": [
+        {
+          "name": "中华医学会",
+          "url": "https://www.cma.org.cn/",
+          "domains": ["cma.org.cn"]
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "name": "中华医学会系列期刊与指南数据库",
+      "use_for": [
+        "正式发表的指南和共识全文",
+        "指南更新、解读和中国临床研究"
+      ],
+      "portals": [
+        {
+          "name": "中华医学期刊网",
+          "url": "https://medjournals.cn/",
+          "domains": ["medjournals.cn"]
+        },
+        {
+          "name": "中华医学期刊全文数据库",
+          "url": "https://www.yiigle.com/index",
+          "domains": ["yiigle.com"]
+        },
+        {
+          "name": "中华医学电子期刊指南共识库",
+          "url": "https://videodata.cma-cmc.com.cn/CN/collection/3213580771653/articles",
+          "domains": ["cma-cmc.com.cn"]
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "name": "中文同行评议研究",
+      "use_for": [
+        "指南未覆盖的新问题",
+        "补充中国人群数据",
+        "解释指南推荐所依据的研究"
+      ],
+      "requirements": [
+        "优先原始研究、系统综述或正式指南方法学论文",
+        "记录期刊、年份、DOI或稳定链接、研究设计与主要局限",
+        "单篇研究不能直接升级为普遍治疗结论"
+      ]
+    }
+  ],
+  "discovery_only_sources": [
+    {
+      "name": "中国知网",
+      "domains": ["cnki.net"],
+      "rule": "可用于发现中文论文，不把搜索摘要或转载页作为最终医学依据。"
+    },
+    {
+      "name": "万方数据",
+      "domains": ["wanfangdata.com.cn"],
+      "rule": "可用于发现中文论文，最终记录原期刊页面、DOI或正式全文来源。"
+    }
+  ],
+  "fallback_international": {
+    "allowed_when": [
+      "没有足够新的中文权威资料",
+      "中文资料互相冲突",
+      "问题涉及国际通行术式、罕见病或快速更新领域"
+    ],
+    "rule": "优先国际专业学会指南、政府卫生机构和同行评议原始研究，并说明对中国患者和当前传播语境的适用性。"
+  },
+  "audit_required_fields": [
+    "case_id",
+    "stage",
+    "item_id",
+    "timecode",
+    "original_text",
+    "medical_question",
+    "searched_at",
+    "sources",
+    "conclusion",
+    "action",
+    "recommended_result",
+    "repair_method",
+    "meaning_change",
+    "voice_or_asset_authorized",
+    "presented_as_scene_original",
+    "user_confirmed_repair",
+    "confidence",
+    "human_review_required"
+  ]
+}

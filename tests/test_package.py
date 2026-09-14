@@ -1,11 +1,24 @@
+import importlib.util
 import json
 import re
+import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "roughcut-review"
+UPDATER_PATH = SKILL / "scripts" / "update_skill.py"
+
+
+def load_updater():
+    spec = importlib.util.spec_from_file_location("roughcut_skill_updater", UPDATER_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load updater")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 class StandaloneSkillTests(unittest.TestCase):
@@ -14,6 +27,8 @@ class StandaloneSkillTests(unittest.TestCase):
             ROOT / "AGENTS.md",
             ROOT / "INSTALL.md",
             SKILL / "SKILL.md",
+            SKILL / "VERSION",
+            UPDATER_PATH,
             SKILL / "agents" / "openai.yaml",
             SKILL / "references" / "select-and-split.md",
             SKILL / "references" / "context-cards.md",
@@ -33,8 +48,9 @@ class StandaloneSkillTests(unittest.TestCase):
         self.assertIn("name: roughcut-review", match.group(1))
         self.assertRegex(match.group(1), r"description: .+")
         self.assertIn("license: MIT", match.group(1))
-        self.assertIn('version: "0.2.0"', match.group(1))
+        self.assertIn('version: "0.3.0"', match.group(1))
         self.assertIn("standard: Agent Skills", match.group(1))
+        self.assertEqual((SKILL / "VERSION").read_text(encoding="utf-8").strip(), "0.3.0")
 
     def test_markdown_links_are_local_and_resolve(self):
         for source in SKILL.rglob("*.md"):
@@ -111,7 +127,95 @@ class StandaloneSkillTests(unittest.TestCase):
         self.assertIn("GitHub Copilot", combined)
         self.assertIn("唯一业务入口", entry)
         self.assertIn("可选界面适配", entry)
+        self.assertIn("不得触发后台检查或静默自改", entry)
         self.assertNotIn("一个开源、可独立安装的 Codex Skill", readme)
+
+    def test_updater_check_only_does_not_modify_installation(self):
+        updater = load_updater()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            installed = root / "installed" / "roughcut-review"
+            installed.mkdir(parents=True)
+            (installed / "SKILL.md").write_text("old", encoding="utf-8")
+            (installed / "VERSION").write_text("0.2.0\n", encoding="utf-8")
+            remote_version = root / "VERSION"
+            remote_version.write_text("0.3.0\n", encoding="utf-8")
+
+            result = updater.update(
+                installed,
+                check_only=True,
+                version_url=remote_version.as_uri(),
+                archive_url=(root / "missing.zip").as_uri(),
+                timeout=5,
+            )
+
+            self.assertEqual(result, 2)
+            self.assertEqual((installed / "VERSION").read_text(encoding="utf-8"), "0.2.0\n")
+            self.assertEqual((installed / "SKILL.md").read_text(encoding="utf-8"), "old")
+
+    def test_updater_backs_up_and_replaces_installed_skill(self):
+        updater = load_updater()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            installed = root / "installed" / "roughcut-review"
+            installed.mkdir(parents=True)
+            (installed / "SKILL.md").write_text("old", encoding="utf-8")
+            (installed / "VERSION").write_text("0.2.0\n", encoding="utf-8")
+            (installed / "local-marker.txt").write_text("old", encoding="utf-8")
+
+            remote_version = root / "VERSION"
+            remote_version.write_text("0.3.0\n", encoding="utf-8")
+            archive_path = root / "update.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                prefix = "medical-roughcut-review-skill-main/roughcut-review"
+                skill_text = "---\nname: roughcut-review\nmetadata:\n  version: \"0.3.0\"\n---\nnew\n"
+                archive.writestr(f"{prefix}/SKILL.md", skill_text)
+                archive.writestr(f"{prefix}/VERSION", "0.3.0\n")
+                archive.writestr(f"{prefix}/scripts/update_skill.py", "# updater\n")
+                archive.writestr(f"{prefix}/remote-marker.txt", "new")
+
+            result = updater.update(
+                installed,
+                check_only=False,
+                version_url=remote_version.as_uri(),
+                archive_url=archive_path.as_uri(),
+                timeout=5,
+            )
+
+            self.assertEqual(result, 0)
+            self.assertEqual((installed / "VERSION").read_text(encoding="utf-8"), "0.3.0\n")
+            self.assertIn("name: roughcut-review", (installed / "SKILL.md").read_text(encoding="utf-8"))
+            self.assertFalse((installed / "local-marker.txt").exists())
+            backups = list((installed.parent / ".roughcut-review-backups").glob("roughcut-review-0.2.0-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual((backups[0] / "local-marker.txt").read_text(encoding="utf-8"), "old")
+
+    def test_updater_rejects_source_checkout(self):
+        updater = load_updater()
+        with self.assertRaises(updater.UpdateError):
+            updater.update(
+                SKILL,
+                check_only=True,
+                version_url=(SKILL / "VERSION").as_uri(),
+                archive_url=(ROOT / "missing.zip").as_uri(),
+                timeout=5,
+            )
+
+    def test_updater_rejects_unsafe_archive_paths(self):
+        updater = load_updater()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            archive_path = root / "unsafe.zip"
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                prefix = "medical-roughcut-review-skill-main/roughcut-review"
+                skill_text = "---\nname: roughcut-review\nmetadata:\n  version: \"0.3.0\"\n---\nnew\n"
+                archive.writestr(f"{prefix}/SKILL.md", skill_text)
+                archive.writestr(f"{prefix}/VERSION", "0.3.0\n")
+                archive.writestr(f"{prefix}/scripts/update_skill.py", "# updater\n")
+                archive.writestr(f"{prefix}/..\\escape.txt", "unsafe")
+
+            with self.assertRaises(updater.UpdateError):
+                updater.extract_skill(archive_path, root / "staged", "0.3.0")
 
 
 if __name__ == "__main__":

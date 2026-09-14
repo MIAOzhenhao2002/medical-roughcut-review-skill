@@ -4,7 +4,7 @@ description: 医疗门诊纪实短视频的独立粗剪与初检工作流。收�
 license: MIT
 metadata:
   author: MIAOzhenhao2002
-  version: "0.2.0"
+  version: "0.3.0"
   standard: Agent Skills
 ---
 
@@ -51,6 +51,10 @@ metadata:
 - 账号路由、团队共用和数据复盘：只有相关时读取 [account-and-learning.md](references/account-and-learning.md)。
 
 阶段切换只保留当前素材、候选方向、已确认项、未解决阻断和必要转交，不重复加载已收口细则。
+
+## 版本更新
+
+只有用户明确要求检查或更新本Skill时，才运行 `scripts/update_skill.py`。默认行为是访问本Skill指定的公开GitHub仓库；发现更高版本后备份当前安装并自动更新，没有更新则不改动。普通粗剪任务不得后台检查或静默自改，也不得把病例、字幕或其他本地资料发送到更新源。只想查看是否有新版本时使用 `--check-only`。
 
 ## 专业能力路由
 

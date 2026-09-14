@@ -21,6 +21,14 @@
 
 > 使用 `$roughcut-review`，先判断这份素材做不做、拆几条，再按需完成粗剪初检。
 
+以后需要更新时，在已安装的Skill中运行：
+
+```bash
+python3 roughcut-review/scripts/update_skill.py
+```
+
+该命令会主动检查公开仓库；发现新版本后先备份当前安装，再自动更新。普通粗剪任务不会静默联网或自我修改。只检查不安装时添加 `--check-only`。完整边界见 [INSTALL.md](INSTALL.md)。
+
 换成其他 Agent 时，业务包不用重做，只需按该 Agent 的 Skill 目录或安装方式加载同一个 `roughcut-review/` 文件夹。完整说明见 [INSTALL.md](INSTALL.md)。
 
 不支持 Agent Skills 的普通智能体，也可以直接打开本仓库并发送：
@@ -34,7 +42,9 @@ AGENTS.md                    # 通用项目入口，不复制业务规则
 INSTALL.md                   # 不同 Agent 的安装与调用说明
 roughcut-review/
 ├── SKILL.md                 # 唯一业务入口，遵循 Agent Skills 开放规范
+├── VERSION                  # 当前通用包版本
 ├── agents/openai.yaml       # 可选的 OpenAI 适配元数据
+├── scripts/update_skill.py  # 用户主动触发的检查与自动更新
 ├── references/              # 只在对应阶段加载的规则
 └── assets/                  # 可复制使用的空白模板
 ```

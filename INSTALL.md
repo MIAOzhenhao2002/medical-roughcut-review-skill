@@ -6,6 +6,30 @@
 
 Agent Skills 兼容客户端会先读取 `name` 和 `description` 判断是否启用，再按任务需要加载正文、参考文件与模板。不同客户端的安装位置和显式调用符号可能不同，但使用的是同一份业务内核。
 
+## 检查并自动更新
+
+安装包内置无第三方依赖的更新器。用户主动运行检查命令时，发现更高版本就自动备份并更新；没有更新则不改动：
+
+```bash
+python3 /完整路径/roughcut-review/scripts/update_skill.py
+```
+
+Windows可使用：
+
+```powershell
+py C:\完整路径\roughcut-review\scripts\update_skill.py
+```
+
+只检查、不安装：
+
+```bash
+python3 /完整路径/roughcut-review/scripts/update_skill.py --check-only
+```
+
+更新器只访问 `MIAOzhenhao2002/medical-roughcut-review-skill` 的公开版本文件和压缩包，不读取或上传病例、字幕及其他本地资料。更新前会在安装目录旁创建 `.roughcut-review-backups/`；失败时保留原版本与备份。它不会随普通粗剪任务自动运行，也不会创建后台定时任务。
+
+如果安装目录本身是Git源码仓库，更新器会拒绝覆盖，请在仓库根目录使用 `git pull --ff-only`。不要把患者资料或个人配置保存在Skill安装文件夹内，因为更新会以公开包完整替换该文件夹。
+
 ## OpenAI Codex
 
 在 Codex 中发送：
@@ -40,5 +64,6 @@ gh skill install MIAOzhenhao2002/medical-roughcut-review-skill roughcut-review
 ## 团队使用边界
 
 - 每台设备、每个 Agent 客户端通常只需安装一次；新建“粗剪”项目只是整理素材的可选方式，不是运行条件；
+- “检查更新”代表用户授权本次检查及发现新版本后的自动更新；普通业务调用不触发更新；
 - 更换医生或账号时提供对应身份和已确认画像；身份未知时保持通用模式，不猜；
 - 不向公开仓库、Issue 或外部检索提交患者身份信息、原始病例、住院号、影像编号、未授权录音、账号后台数据或凭据。

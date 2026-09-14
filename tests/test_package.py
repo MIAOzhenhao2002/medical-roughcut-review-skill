@@ -16,6 +16,7 @@ class StandaloneSkillTests(unittest.TestCase):
             SKILL / "SKILL.md",
             SKILL / "agents" / "openai.yaml",
             SKILL / "references" / "select-and-split.md",
+            SKILL / "references" / "context-cards.md",
             SKILL / "references" / "medical-review.md",
             SKILL / "references" / "minimal-rewrite.md",
             SKILL / "references" / "independent-review.md",
@@ -78,6 +79,24 @@ class StandaloneSkillTests(unittest.TestCase):
         yaml_text = (SKILL / "agents" / "openai.yaml").read_text(encoding="utf-8")
         self.assertIn("allow_implicit_invocation: true", yaml_text)
         self.assertIn("$roughcut-review", yaml_text)
+
+    def test_iterative_review_and_context_cards_are_self_contained(self):
+        skill_text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        intake = (SKILL / "references" / "intake-and-state.md").read_text(encoding="utf-8")
+        delete = (SKILL / "references" / "delete-and-keep.md").read_text(encoding="utf-8")
+        cards = (SKILL / "references" / "context-cards.md").read_text(encoding="utf-8")
+        final = (SKILL / "references" / "revise-final-and-handoff.md").read_text(encoding="utf-8")
+        combined = "\n".join([skill_text, intake, delete, cards, final])
+
+        self.assertIn("V1、V2、V3", combined)
+        self.assertIn("复检次数不预设", combined)
+        self.assertIn("只复检变化及其影响到的相邻片段", combined)
+        self.assertIn("过度碎剪检查", combined)
+        self.assertIn("先修剪辑，再补字", combined)
+        self.assertIn("状态：候选 / 待人工看片 / 最终字卡 / 取消 / 不加", combined)
+        self.assertIn("每句话必须能追溯", combined)
+        self.assertIn("不能把上一轮字卡无条件带入新版本", combined)
+        self.assertNotIn("roughcut-context-cards", combined)
 
     def test_package_is_positioned_as_cross_agent(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
